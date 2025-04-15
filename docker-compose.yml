@@ -1,0 +1,109 @@
+services:
+  atlassian-db:
+    build: docker/db
+    container_name: atlassian-db-container
+    restart: always
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_URL: "jdbc:postgresql://localhost:15432/postgres"
+    volumes:
+      - atlassian_postgresql_data:/var/lib/postgresql/data
+    networks:
+      - atlassian_network
+  atlassian-jira:
+    build: docker/jira
+    container_name: atlassian-jira-container
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:      
+      ATL_DB_DRIVER: 'org.postgresql.Driver'
+      ATL_DB_TYPE: 'postgres72'
+      ATL_JDBC_URL: 'jdbc:postgresql://atlassian-db-container:5432/jira_db'
+      ATL_JDBC_USER: 'jira_db_user'
+      ATL_JDBC_PASSWORD: 'jira_db_password'
+      JVM_MINIMUM_MEMORY: 512m
+      JVM_MAXIMUM_MEMORY: 1024m
+    volumes:
+      - atlassian_jira_data:/var/atlassian/application-data/jira
+    networks:
+      - atlassian_network
+  atlassian-confluence:
+    build: docker/confluence
+    container_name: atlassian-confluence-container
+    restart: always
+    ports:
+      - "8090:8090"
+      - "8091:8091"
+    environment:      
+      ATL_DB_DRIVER: 'org.postgresql.Driver'
+      ATL_DB_TYPE: 'postgresql'
+      ATL_JDBC_URL: 'jdbc:postgresql://atlassian-db-container:5432/confluence_db'
+      ATL_JDBC_USER: 'confluence_db_user'
+      ATL_JDBC_PASSWORD: 'confluence_db_password'
+      JVM_MINIMUM_MEMORY: 512m
+      JVM_MAXIMUM_MEMORY: 1024m
+    volumes:
+      - atlassian_confluence_data:/var/atlassian/application-data/confluence
+    networks:
+      - atlassian_network
+  atlassian-bitbucket:
+    build: docker/bitbucket
+    container_name: atlassian-bitbucket-container
+    restart: always
+    ports:
+      - "7990:7990"
+      - "7999:7999"
+    environment:      
+      JDBC_DRIVER: 'org.postgresql.Driver'
+      JDBC_URL: 'jdbc:postgresql://atlassian-db-container:5432/bitbucket_db'
+      JDBC_USER: 'bitbucket_db_user'
+      JDBC_PASSWORD: 'bitbucket_db_password'
+      JVM_MINIMUM_MEMORY: 512m
+      JVM_MAXIMUM_MEMORY: 1024m
+    volumes:
+      - atlassian_bitbucket_data:/var/atlassian/application-data/bitbucket
+    networks:
+      - atlassian_network
+  atlassian-bamboo:
+    build: docker/bamboo
+    container_name: atlassian-bamboo-container
+    restart: always
+    ports:
+      - "8085:8085"
+      - "54663:54663"
+    environment:      
+      ATL_DB_TYPE: 'postgresql'
+      ATL_JDBC_URL: 'jdbc:postgresql://atlassian-db-container:5432/bamboo_db'
+      ATL_JDBC_USER: 'bamboo_db_user'
+      ATL_JDBC_PASSWORD: 'bamboo_db_password'
+      ATL_UNSET_SENSITIVE_ENV_VARS: 'false'
+      JVM_MINIMUM_MEMORY: 512m
+      JVM_MAXIMUM_MEMORY: 1024m
+    volumes:
+      - atlassian_bamboo_data:/var/atlassian/application-data/bamboo
+    networks:
+      - atlassian_network
+networks:
+  atlassian_network:
+    external: true
+    driver: bridge
+volumes:
+  atlassian_postgresql_data:
+    external: true
+    name: atlassian_postgresql_data
+  atlassian_jira_data:
+    external: true
+    name: atlassian_jira_data
+  atlassian_confluence_data:
+    external: true
+    name: atlassian_confluence_data
+  atlassian_bitbucket_data:
+    external: true
+    name: atlassian_bitbucket_data
+  atlassian_bamboo_data:
+    external: true
+    name: atlassian_bamboo_data

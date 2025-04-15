@@ -1,0 +1,5 @@
+docker network create -d bridge atlassian_network;
+DATE_TIME=$(date '+%HH%MM%SS_%dD%mM%YY') &&
+docker build -t atlassian_build_agent -f atlassian_build_agent.Dockerfile . &&
+sh -c "docker run -it --name 'atlassian_build_agent_${DATE_TIME}' --network atlassian_network --entrypoint //bin/bash -v //var/run/docker.sock:/var/run/docker.sock atlassian_build_agent --login -i -c \"cd /atlassian-install && cd atlassian-agent && mvn -T 8 clean package && cd target && cp atlassian-agent-jar-with-dependencies.jar ../../docker/jira/atlassian-agent.jar && cp atlassian-agent-jar-with-dependencies.jar ../../docker/confluence/atlassian-agent.jar && cp atlassian-agent-jar-with-dependencies.jar ../../docker/bitbucket/atlassian-agent.jar && cp atlassian-agent-jar-with-dependencies.jar ../../docker/bamboo/atlassian-agent.jar && cd /atlassian-install && docker volume create atlassian_postgresql_data; docker volume create atlassian_jira_data; docker volume create atlassian_confluence_data; docker volume create atlassian_bitbucket_data; docker volume create atlassian_bamboo_data; docker-compose down; docker-compose build --parallel && docker-compose up -d\""
+
